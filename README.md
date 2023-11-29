@@ -3,6 +3,7 @@
 This repository contains the code for a vision-enabled dialogue system. The system integrates dialogue and visual inputs, leveraging the latest advancements in Large Language Models to create a more contextually aware and immersive dialogue experience. The system summarises the images in the prompt to reduce its length.
 
 For this implementation we use GPT-4. You can use the system as a standalone application with a webcam or integrate it with a Furhat robot.
+This blog post explains the system in more detail: [Implementing Vision-Powered Chit-Chats with Robots: A GPT-4 Adventure](https://dev.to/giubots/implementing-vision-powered-chit-chats-with-robots-a-gpt-4-adventure-5fhg).
 
 ## Paper Reference
 
