@@ -40,7 +40,8 @@ def send_furhat(on_frame, stopped, detection_period=50):
 def dialogue_furhat(on_message):
     print("Starting dialogue")
     furhat = FurhatRemoteAPI(FURHAT_IP)
-
+    furhat.set_voice(name="Matthew")
+    
     try:
         while True:
             furhat.attend(user="CLOSEST")
