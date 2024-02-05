@@ -61,18 +61,21 @@ def dialogue_furhat(on_message):
 
 
 if __name__ == "__main__":
-    conversation = Conversation(GPT4())
+    try:
+        conversation = Conversation(GPT4())
 
-    # Start video capture
-    stopped = threading.Event()
-    t_args = (conversation.add_frame, stopped)
-    thread = threading.Thread(target=send_furhat, args=t_args)
-    thread.start()
+        # Start video capture
+        stopped = threading.Event()
+        t_args = (conversation.add_frame, stopped)
+        thread = threading.Thread(target=send_furhat, args=t_args)
+        thread.start()
 
-    # Start dialogue
-    dialogue_furhat(conversation.add_text)
-
-    # Dialogue exited, stop video capture
-    stopped.set()
-    print("Waiting for thread to stop")
-    thread.join()
+        # Start dialogue
+        dialogue_furhat(conversation.add_text)
+    except Exception as e:
+        print(e)
+    finally:
+        # Dialogue exited, stop video capture
+        stopped.set()
+        print("Waiting for thread to stop")
+        thread.join()
