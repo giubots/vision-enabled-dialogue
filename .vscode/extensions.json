@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "streetsidesoftware.code-spell-checker-british-english",
+        "mhutchie.git-graph",
+        "visualstudioexptteam.vscodeintellicode",
+        "gruntfuggly.todo-tree"
+    ]
+}
