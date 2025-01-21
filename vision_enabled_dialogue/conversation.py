@@ -30,6 +30,8 @@ class Conversation:
     _messages: list[Message]
     _lock: Lock
     _force_vlm: bool
+    _last_frame: FrameMessage
+    _add_behaviour: callable
 
     def __init__(
         self,
@@ -38,16 +40,36 @@ class Conversation:
         model_chooser: LLM,
         fr_buff_size: int = 4,
         fr_recap: int = 3,
+        add_behaviour: Literal["keep_history", "keep_latest"] = "keep_history",
     ):
+        """Initialise the conversation with the LLMs and the frame summarisation settings.
+
+        The conversation can be configured to keep a history of frames (add_behaviour="keep_history") or only the latest frame (add_behaviour="keep_latest").
+        Keeping a history will summarise the frames when necessary, while keeping only the latest frame will not summarise the frames and ignore fr_buff_size and fr_recap.
+
+        :param vlm: The LLM that generates the responses and summaries.
+        :param llm: LLM used when the VLM is not needed.
+        :param model_chooser: The LLM that chooses whether to use the VLM or the LLM.
+        :param fr_buff_size: The number of frames to buffer before summarising.
+        :param fr_recap: The maximum number of frames to summarise.
+        :param add_behaviour: The behaviour to use when adding frames.
+        """
         self.vlm = vlm
         self.llm = llm
         self.model_chooser = model_chooser
+        if add_behaviour == "keep_history":
+            self._add_behaviour = self._add_behaviour_keep_history
+        elif add_behaviour == "keep_latest":
+            self._add_behaviour = self._add_behaviour_keep_latest
+        else:
+            raise ValueError("Invalid add_behaviour")
         self.fr_buff_size = fr_buff_size
         self.fr_recap = fr_recap
         self._fr_count = 0
         self._messages = []
         self._lock = Lock()
         self._force_vlm = False
+        self._last_frame = None
 
     def add_text(self, text: str, model_choice: Literal["VLM", "LM"] = None) -> str:
         """Add a user message and return the response."""
@@ -94,6 +116,8 @@ class Conversation:
                     ),
                     *self._messages,
                 ]
+                if self._last_frame is not None:
+                    prompt.append(self._last_frame)
                 answer = self.vlm.query(prompt)
 
             else:
@@ -115,17 +139,24 @@ class Conversation:
         """Add a frame to the conversation, summarise if necessary."""
 
         with self._lock:
-            self._messages.append(FrameMessage(frame))
-            self._fr_count += 1
-
-            if self._fr_count >= self.fr_buff_size:
-                new_messages, removed = self.get_fr_summary()
-                self._messages = new_messages
-                self._fr_count -= removed
+            self._add_behaviour(frame)
 
     def force_vlm(self):
         """Force the next message to be processed by the VLM."""
         self._force_vlm = True
+
+    def _add_behaviour_keep_history(self, string64: str):
+        # Call with lock
+        self._messages.append(FrameMessage(string64))
+        self._fr_count += 1
+        if self._fr_count >= self.fr_buff_size:
+            new_messages, removed = self.get_fr_summary()
+            self._messages = new_messages
+            self._fr_count -= removed
+
+    def _add_behaviour_keep_latest(self, string64: str):
+        # Call with lock
+        self._last_frame = FrameMessage(string64)
 
     def get_fr_summary(self) -> Tuple[list[Message], int]:
         """Summarise the frames and return the new messages and the number of frames removed."""
