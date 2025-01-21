@@ -4,10 +4,10 @@ class Message:
     def is_frame(self):
         return False
 
-    def is_user(self):
+    def is_system(self):
         return False
 
-    def is_system(self):
+    def is_user(self):
         return False
 
     def is_assistant(self):
@@ -56,7 +56,7 @@ class SystemMessage(Message):
         return {"role": "system", "content": self.content}
 
     def __str__(self) -> str:
-        return "Answer: " + self.content
+        return "System: " + self.content
 
 
 class UserMessage(Message):
@@ -72,6 +72,9 @@ class UserMessage(Message):
             "content": [{"type": "text", "text": self.content}],
         }
 
+    def __str__(self) -> str:
+        return "User: " + self.content
+
 
 class AssistantMessage(Message):
     def __init__(self, content):
@@ -86,6 +89,9 @@ class AssistantMessage(Message):
             "content": [{"type": "text", "text": self.content}],
         }
 
+    def __str__(self) -> str:
+        return "Assistant: " + self.content
+
 
 class FSummaryMessage(Message):
     def __init__(self, content):
@@ -99,3 +105,6 @@ class FSummaryMessage(Message):
             "role": "user",
             "content": [{"type": "text", "text": self.content}],
         }
+
+    def __str__(self) -> str:
+        return "Image summary: " + self.content
