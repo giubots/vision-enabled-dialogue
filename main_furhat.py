@@ -1,12 +1,11 @@
-import threading
 import base64
+import threading
 
-from furhat_remote_api import FurhatRemoteAPI
 import zmq
+from furhat_remote_api import FurhatRemoteAPI
 
 from vision_enabled_dialogue.conversation import Conversation
-from vision_enabled_dialogue.llm import GPT4
-
+from vision_enabled_dialogue.llm import GPT
 
 FURHAT_IP = "YOUR-FURHAT-IP-HERE"
 
@@ -41,7 +40,7 @@ def dialogue_furhat(on_message):
     print("Starting dialogue")
     furhat = FurhatRemoteAPI(FURHAT_IP)
     furhat.set_voice(name="Matthew")
-    
+
     try:
         while True:
             furhat.attend(user="CLOSEST")
@@ -62,7 +61,7 @@ def dialogue_furhat(on_message):
 
 if __name__ == "__main__":
     try:
-        conversation = Conversation(GPT4())
+        conversation = Conversation(GPT(model="gpt-4o-mini-2024-07-18"))
 
         # Start video capture
         stopped = threading.Event()

@@ -1,13 +1,13 @@
+import argparse
+import base64
 import json
 import threading
-import base64
 import time
-import cv2
-import argparse
 
+import cv2
 
 from vision_enabled_dialogue.conversation import Conversation
-from vision_enabled_dialogue.llm import GPT4
+from vision_enabled_dialogue.llm import GPT
 
 
 def send_vid(on_frame, stopped, source, period=5):
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    conversation = Conversation(GPT4())
+    conversation = Conversation(GPT(model="gpt-4o-mini-2024-07-18"))
 
     # Start video capture
     stopped = threading.Event()

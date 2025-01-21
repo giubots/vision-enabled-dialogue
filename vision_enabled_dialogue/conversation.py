@@ -53,7 +53,6 @@ class Conversation:
                 ),
                 *self._messages,
             ]
-            prompt = [m.gpt_format() for m in prompt]
             answer = self.llm.query(prompt)
 
             assistantMessage = AssistantMessage(answer)
@@ -98,9 +97,9 @@ class Conversation:
                 "The images can be repeating, this is normal, do not point this out in the description."
                 "Respond with only the summary in one sentence. This is very important. "
                 "Do not include warnings or other messages."
-            ).gpt_format(),
-            *[b.gpt_format() for b in before],
-            *[s.gpt_format() for s in to_summarise],
+            ),
+            *before,
+            *to_summarise,
         ]
         summary = self.llm.query(prompt)
 
