@@ -76,7 +76,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    conversation = Conversation(GPT(model="gpt-4o-mini-2024-07-18"))
+    conversation = Conversation(
+        vlm=GPT(model="gpt-4o-mini-2024-07-18"),
+        llm=GPT(model="gpt-3.5-turbo-0125"),
+        model_chooser=GPT(model="gpt-3.5-turbo-0125"),
+    )
 
     # Start video capture
     stopped = threading.Event()
