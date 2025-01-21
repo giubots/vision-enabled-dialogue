@@ -197,6 +197,16 @@ class Conversation:
 
         return messages, i - first_fr  # type: ignore
 
+    def get_conv_summary(self) -> str:
+        """Use the LLM to summarise the conversation into a paragraph and return it."""
+
+        prompt = [
+            SystemMessage("Summarise the following conversation in one paragraph. "),
+            *[m for m in self._messages if not m.is_frame()],
+        ]
+        summary = self.llm.query(prompt)
+        return summary
+
     def __str__(self) -> str:
         with self._lock:
             return "\n".join([str(m) for m in self._messages])
