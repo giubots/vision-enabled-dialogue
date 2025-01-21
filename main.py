@@ -38,14 +38,17 @@ def send_cam(on_frame, stopped, period=5):
         time.sleep(period)
 
 
-def dialogue_interactive(on_message):
+def dialogue_interactive(conversation: Conversation):
     """Start an interactive dialogue with the user."""
     try:
         while True:
             text = input("You: ")
             if text:
-                answer = on_message(text)
+                answer = conversation.add_text(text)
                 print("AI: ", answer)
+            else:
+                print("Forcing VLM on next question")
+                conversation.force_vlm()
     except KeyboardInterrupt:
         pass
 
@@ -100,7 +103,7 @@ if __name__ == "__main__":
             script = json.load(f)
         dialogue_script(conversation.add_text, script)
     else:
-        dialogue_interactive(conversation.add_text)
+        dialogue_interactive(conversation)
 
     # Dialogue exited, stop video capture
     stopped.set()

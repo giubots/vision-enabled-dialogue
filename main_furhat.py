@@ -36,27 +36,43 @@ def send_furhat(on_frame, stopped, detection_period=50):
     print("Stopping video capture")
 
 
-def dialogue_furhat(on_message):
-    print("Starting dialogue")
-    furhat = FurhatRemoteAPI(FURHAT_IP)
-    furhat.set_voice(name="Matthew")
+def dialogue_furhat(conversation: Conversation):
+    def conv_io(conversation: Conversation):
+        furhat = FurhatRemoteAPI(FURHAT_IP)
+        furhat.set_voice(name="Matthew")
+
+        try:
+            while True:
+                furhat.attend(user="CLOSEST")
+                furhat.set_led(red=0, green=0, blue=255)
+                result = furhat.listen().message  # type: ignore
+                furhat.set_led(red=0, green=0, blue=0)
+                if result:
+                    print("You:", result)
+                    furhat.gesture(name="GazeAway")
+                    furhat.attend(location="1,-1,5")
+                    answer = conversation.add_text(result)
+                    print("AI:", answer)
+                    furhat.attend(user="CLOSEST")
+                    furhat.say(text=answer, blocking=True)
+                else:
+                    print("No text detected")
+        except Exception as e:
+            print(e)
+        finally:
+            furhat.attend(user=None)
+
+    t = threading.Thread(target=conv_io, args=(conversation,))
+    t.daemon = True
+    t.start()
 
     try:
         while True:
-            furhat.attend(user="CLOSEST")
-            result = furhat.listen().message  # type: ignore
-            if result:
-                print(result)
-                furhat.gesture(name="GazeAway")
-                furhat.attend(location="0,10,0")
-                answer = on_message(result)
-                furhat.attend(user="CLOSEST")
-                furhat.say(text=answer, blocking=True)
-            else:
-                print("No text detected")
-    except (Exception, KeyboardInterrupt) as e:
-        print(e)
-    print("Stopping dialogue")
+            input("")
+            print("Forcing VLM on next question")
+            conversation.force_vlm()
+    except KeyboardInterrupt:
+        print("Stopping dialogue")
 
 
 if __name__ == "__main__":
@@ -74,7 +90,7 @@ if __name__ == "__main__":
         thread.start()
 
         # Start dialogue
-        dialogue_furhat(conversation.add_text)
+        dialogue_furhat(conversation)
     except Exception as e:
         print(e)
     finally:
