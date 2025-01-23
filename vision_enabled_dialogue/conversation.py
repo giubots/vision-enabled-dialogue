@@ -166,10 +166,9 @@ class Conversation:
         first_fr = None
         i = None
         for i, m in enumerate(self._messages):
-            if m.is_frame():
-                if first_fr is None:
-                    first_fr = i
-            if first_fr is not None and (m.is_user() or i - first_fr >= self.fr_recap):
+            if m.is_frame() and first_fr is None:
+                first_fr = i
+            if first_fr is not None and (not m.is_frame() or i - first_fr >= self.fr_recap):
                 break
         before = self._messages[:first_fr]
         to_summarise = self._messages[first_fr:i]
