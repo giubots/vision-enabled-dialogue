@@ -1,15 +1,19 @@
 import base64
 
+import cv2
 import rclpy
+from cv_bridge import CvBridge
 from hri_msgs.msg import LiveSpeech
 from rclpy.action import ActionClient
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.node import Node
+from rclpy.qos import QoSPresetProfiles
 from rclpy.subscription import Subscription
-from sensor_msgs.msg import Image
-from tts_msgs.action import TTS
-
+from sensor_msgs.msg import Image, CompressedImage
 from vision_enabled_dialogue.conversation import Conversation
 from vision_enabled_dialogue.llm import GPT
+
+from tts_msgs.action import TTS
 
 
 class VisionEnabledDialogue(Node):
@@ -38,6 +42,13 @@ class VisionEnabledDialogue(Node):
             self.send_cam,
             10,
         )
+        self.cam_sub = self.create_subscription(
+            CompressedImage,
+            "/camera/image_raw/compressed",
+            self.send_cam_compressed,
+            qos_profile=QoSPresetProfiles.SENSOR_DATA.value,
+            callback_group=MutuallyExclusiveCallbackGroup(),
+        )
         self.text_client = ActionClient(self, TTS, "/tts_engine/tts")
 
     def send_text(self, msg):
@@ -54,6 +65,13 @@ class VisionEnabledDialogue(Node):
         string64 = base64.b64encode(msg.data).decode("utf-8")  # type: ignore
         self.conversation.add_frame(string64)
         print("Frame sent")
+
+    def send_cam_compressed(self, msg):
+        image = CvBridge().compressed_imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
+        _, img_encoded = cv2.imencode(".png", image)
+        string64 = base64.b64encode(img_encoded).decode("utf-8")
+        self.conversation.add_frame(string64)
 
     def force_vlm(self):
         self.conversation.force_vlm()
