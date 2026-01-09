@@ -11,7 +11,7 @@ Please refer to the paper for a detailed explanation of the system:
 
 - Title: "I Was Blind but Now I See: Implementing Vision-Enabled Dialogue in Social Robots"
 - Authors: Giulio Antonio Abbo and Tony Belpaeme
-- To be presented as a Late Breaking Report at the 2025 HRI conference.
+- [Link to the HRI'24 LBR paper](https://doi.org/10.1109/HRI61500.2025.10973830) (March 2025)
 - [Link to the arXiv preprint](https://doi.org/10.48550/arXiv.2311.08957) (November 2023)
 
 ## Setup
