@@ -1,12 +1,9 @@
 {
     "recommendations": [
-        "ms-python.debugpy",
-        "ms-python.vscode-pylance",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "streetsidesoftware.code-spell-checker-british-english",
+        "DavidAnson.vscode-markdownlint",
         "mhutchie.git-graph",
-        "visualstudioexptteam.vscodeintellicode",
-        "gruntfuggly.todo-tree"
+        "redhat.vscode-xml",
+        "sonarsource.sonarlint-vscode",
+        "streetsidesoftware.code-spell-checker-british-english"
     ]
 }

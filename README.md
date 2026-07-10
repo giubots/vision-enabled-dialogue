@@ -1,128 +1,123 @@
 # VISION-ENABLED DIALOGUE
 
-This repository contains the code for a vision-enabled dialogue system. The system integrates dialogue and visual inputs, leveraging the latest advancements in Large Language Models to create a more contextually aware and immersive dialogue experience. The system summarises the images in the prompt to reduce its length.
+A dialogue system that combines speech and camera frames in a shared conversation history, then uses a configurable (for example, text-only or multimodal) language model to generate responses. The code is split into a reusable dialogue manager, a conversation-history layer with summarisation strategies, and entrypoints for standalone and ROS 2 use.
 
-For this implementation, we use GPT-4. You can use the system as a standalone application with a webcam or integrate it with a Furhat robot.
-This blog post explains the system in more detail: [Implementing Vision-Powered Chit-Chats with Robots: A GPT-4 Adventure](https://dev.to/giubots/implementing-vision-powered-chit-chats-with-robots-a-gpt-4-adventure-5fhg).
+This repository contains the implementation described in the paper _"I Was Blind but Now I See: Implementing Vision-Enabled Dialogue in Social Robots"_ by Giulio Antonio Abbo and Tony Belpaeme (March 2025) [available here](https://giubots.net/publications/was-blind-but/). Link to the [HRI'25 LBR paper](https://doi.org/10.1109/HRI61500.2025.10973830). For the version of the code used in the paper, see the [v0.2.0](https://doi.org/10.5281/zenodo.14627887).
 
-## Paper Reference
+## Contents
 
-Please refer to the paper for a detailed explanation of the system:
+- [Features](#features)
+- [Installation](#installation)
+- [Usage - Get started](#usage---get-started)
+- [Usage - Generating responses](#usage---generating-responses)
+- [Usage - Rendering outputs and handling interruptions](#usage---rendering-outputs-and-handling-interruptions)
+- [Usage - Manage prompt length](#usage---manage-prompt-length)
+- [ROS 2 compatibility](#ros-2-compatibility)
+- [Furhat robot compatibility](#furhat-robot-compatibility)
+- [Contributing](#contributing)
+- [Reference](#reference)
 
-- Title: "I Was Blind but Now I See: Implementing Vision-Enabled Dialogue in Social Robots"
-- Authors: Giulio Antonio Abbo and Tony Belpaeme
-- [Link to the HRI'25 LBR paper](https://doi.org/10.1109/HRI61500.2025.10973830) (March 2025)
-- [Link to the arXiv preprint](https://doi.org/10.48550/arXiv.2311.08957) (November 2023)
+## Features
 
-## Setup
+- Separates conversation management from response generation, so the dialogue flow, model choice, etc., can be changed independently.
+- Supports both text-only generation and vision-language generation through a shared response-generator interface.
+- Can choose between the text model and the vision model with a lightweight chooser model, or force the next turn to use the VLM.
+- In addition to the usual prompt instructions, the system allows for steering instructions to be sent per turn or persistently; these are put at the end of the prompt to further guide the model's output.
+- Applies background history-compaction strategies so older frames (images) and mixed content can be summarised instead of keeping every raw item in the prompt.
+- Streams generated text in sentence-sized chunks for faster interactions.
+- Stores camera frames, spoken turns, thoughts, and generated turns in a typed conversation history.
+- Preserves generation metadata in the history for later inspection.
 
-- Clone the repository:
- ```shell
-  git clone https://github.com/giubots/vision-enabled-dialogue.git
-  cd vision-enabled-dialogue
- ```
+## Installation
 
-### Use it as a standalone application
-
-- Install dependencies (we are using Python 3.12):
-
- ```shell
-  pip install -r requirements.txt
- ```
-
-- Run the standalone application (WINDOWS):
-
- ```powershell
-  $env:OPENAI_API_KEY = 'YOUR-KEY-HERE'; python .\main.py
- ```
-
-- Run the standalone application (LINUX):
-
- ```shell
-  OPENAI_API_KEY='YOUR-KEY-HERE' python main.py
- ```
-
-- By default, the application uses the webcam as input. You can also specify a video file as input, which will be fed frame-by-frame:
-
- ```shell
-  python main.py --video=./video.mp4
- ```
-
-- You can also specify a script file (JSON array of strings) to use as input instead of stdin:
-
- ```shell
-   python main.py --script=./script.json
- ```
-
-### Use it with a Furhat robot
-
-_Note: the Furhat SDK does not currently support the video feed, only the actual robot does._
-
-- Install dependencies:
-
- ```shell
-  pip install -r requirements-furhat.txt
- ```
-
-- Enable the video feed: [instructions](https://docs.furhat.io/users/#external-feeds).
-- Start the API server: [instructions](https://docs.furhat.io/remote-api/#run-the-server-on-the-robot).
-- Set the `FURHAT_IP` variable in `main_furhat.py` to the IP address of your Furhat robot.
-
-- Run the Furhat implementation (WINDOWS):
-
- ```powershell
-  $env:OPENAI_API_KEY = 'YOUR-KEY-HERE'; python .\main_furhat.py
- ```
-
-- Run the Furhat implementation (LINUX):
-
- ```shell
-  OPENAI_API_KEY='YOUR-KEY-HERE' python main_furhat.py
- ```
-
-### Use it with ROS2
-
-You can treat this repo as a ROS2 package. Note that this implementation is still in its very early stages. The easiest way is to run this in the included ROS2 Devcontainer. Alternatively, you can clone this repo in your workspace's src folder. The commands below build, source and run the node.
+For the standalone Python entrypoint, install the main dependencies:
 
 ```shell
-# In your workspace folder
+pip install -r requirements.txt
+pip install opencv-python
+```
+
+The default GPT client in this repository is configured in code and points to `http://localhost:11434/v1` with the API key `ollama`. If you want to use a different backend, set the environment variables `OPENAI_API_BASE_URL` and `OPENAI_API_KEY` before running the code, or pass a custom `ResponseGenerator` to the `DialogueManager` constructor. To use OpenAI models, set `OPENAI_API_BASE_URL` to an empty string.
+
+## Usage - Get started
+
+The script in `main.py` shows a simple example of using the `DialogueManager` with a webcam and a vision-enabled LLM. Through the default `SummariseHeavy` strategy with a `HidingSummariser, it always keeps four images in memory and hides the rest. It also contains a more in-depth example of how to customise the dialogue manager.
+
+Ensure you have Ollama running with the `gemma3:27b` model on port `11434`, then run the script:
+
+```shell
+python main.py
+```
+
+## Usage - Generating responses
+
+Responses are generated by the `DialogueManager` class, which takes a `ResponseGenerator`, which represent a set of instructions for the LLM. It uses a `LLM` implementation to produce the actual responses. Currently only the `GPT` implementation is available, which uses the OpenAI conventions, also compatible with Ollama.
+
+The response is streamed in sentence-sized chunks, so the first part of the response is available before the entire generation is complete. The metadata about the generation is stored in the conversation history, so you can inspect it later.
+
+## Usage - Rendering outputs and handling interruptions
+
+Provide a function to handle the generated text chunks to the `DialogueManager` constructor, for example to print them to the console or send them to a TTS engine. If the speech is interrupted, this function should return the text that was actually spoken, so the dialogue manager can store it in the conversation history. The full generated text is also stored in the conversation history.
+
+The `ConversationHistory` class uses two callback functions to notify when a new part is added or when a part is summarised. You can use these callbacks to update the UI or trigger other actions.
+
+## Usage - Manage prompt length
+
+Conversation length is controlled by the history layer in `vision_enabled_dialogue/conversation_history`.
+The main building blocks are:
+
+- `ConversationHistory`, which stores the ordered `ConversationPart` objects and applies growth strategies in the background.
+- `GrowthStrategy`, which defines how to summarise parts of the conversation using a `Summariser`.
+  - `SummariseHeavy`, summarises older _heavy_ parts (e.g., frames) once their count exceeds a limit.
+  - `KeepLastNStrategy`, which keeps the last N _important_ parts (e.g., text) and summarises the rest.
+- `Summariser`, which defines how to summarise conversation parts, when a growth strategy requires it.
+  - `FrameSummariser`, which produces a summary of images.
+  - `MixedSummariser`, which produces a text summary for mixed conversation parts.
+  - `HidingSummariser`, which hides parts from the transcript (but does not remove them from memory).
+
+For instance, **to summarise the initial part of the conversation** when it becomes too long, you can use a `KeepLastNStrategy` with a `MixedSummariser`.
+
+If you want **to reduce the prompt size**, substituting consecutive frames with a text summary, you can use `SummariseHeavy` strategy with a `FrameSummariser`, defining the minimum and maximum number of frames to keep in the prompt. If instead you want to hide older parts from the prompt, while keeping them in memory, you can use `HidingSummariser` instead.
+
+## ROS 2 compatibility
+
+This package is compatible with ROS 2 (tested on Humble). An example node is provided in `vision_enabled_dialogue/main_ros.py`. It declares the `persistent_steering` parameter and uses these interfaces:
+
+- Subscribed topics: `/humans/voices/anonymous_speaker/speech`, `dialogue/steering`, `/camera/image_raw`, `/camera/image_raw/compressed`
+- Published topics: `/conversation`, `/transcript`
+- Action client: `/tts_engine/tts`
+
+To test the node, you can install this repo as a ROS 2 Python package (in `your-workspace/src/vision_enabled_dialogue`), make sure the dependencies are installed, then build the workspace, source and run it with:
+
+```shell
 colcon build --symlink-install
 source ./install/setup.bash
-cd src/vision_enabled_dialogue/
-pip install -r requirements.txt --break-system-packages
-OPENAI_API_KEY='YOUR-KEY-HERE' ros2 run vision_enabled_dialogue main
+ros2 run vision_enabled_dialogue main
 ```
 
-For the frames topic, this node listens to `/camera1/image_raw`. To test it you can use [usb_cam](https://ros-drivers.github.io/usb_cam/main/).
-In the commands below, change 'jazzy' with your ROS2 version if supported.
+## Furhat robot compatibility
 
-```shell
-sudo apt-get install ros-jazzy-usb-cam
-source /opt/ros/jazzy/setup.bash
-ros2 run usb_cam usb_cam_node_exe --ros-args --remap __ns:=/camera1 -p framerate:=1.0 -p pixel_format:="raw_mjpeg"
+Following the deprecation of Furhat's RemoteAPIs, this repository no longer provides a Furhat-specific entrypoint. You can use this library in your existing Furhat project.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
+
+## Reference
+
+If you use this code in your work, please cite the paper:
+
+```bibtex
+@inproceedings{10.5555/3721488.3721641,
+author = {Abbo, Giulio Antonio and Belpaeme, Tony},
+title = {I Was Blind but Now I See: Implementing Vision-Enabled Dialogue in Social Robots},
+year = {2025},
+publisher = {IEEE Press},
+booktitle = {Proceedings of the 2025 ACM/IEEE International Conference on Human-Robot Interaction},
+pages = {1176–1180},
+numpages = {5},
+keywords = {conversation, dialogue, hri, large language model, prompt engineering, ros, vision language model},
+location = {Melbourne, Australia},
+series = {HRI '25}
+}
 ```
-
-For the dialogue topic, we rely on the ROS4HRI [rqt_chat](https://github.com/pal-robotics/rqt_chat) tool and its topics. You can install it by cloning the repo and its dependencies in the src folder.
-
-```shell
-cd ws/src
-git clone https://github.com/pal-robotics/rqt_chat.git
-git clone https://github.com/ros4hri/hri_msgs.git
-git clone https://github.com/ros4hri/hri_actions_msgs.git
-git clone https://github.com/pal-robotics/pal_tts_msgs.git
-cd ..
-sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y 
-source /opt/ros/jazzy/setup.bash
-colcon build --symlink-install
-source ./install/setup.bash
-rqt -s rqt_chat --force-discover
-```
-
-## Usage
-
-Launch the application, you can start interacting with it (by talking to the Furhat, writing to the console, or sending messages to the right ROS2 topic).
-The application will use the available images (through Furhat's camera, webcam, or images published on the right ROS2 topic) to enhance the interaction.
-In the Furhat and standalone setups, sending an empty message will force the system to use a VLM on the next interaction.
-
-The models used and the strategy for handling the images can be customised in code.
-Note that the delay to get an answer from the LLM can vary between 1 and 10 seconds.

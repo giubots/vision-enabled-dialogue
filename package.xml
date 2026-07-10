@@ -2,13 +2,27 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>vision_enabled_dialogue</name>
-  <version>0.0.0</version>
-  <description>vision_enabled_dialogue</description>
-  <maintainer email="giubots@protonmail.com">giubots</maintainer>
-  <license>MIT</license>
+  <version>0.3.0</version>
+  <description>A ROS 2 package for an LLM-based dialogue system that incorporates visual inputs to enhance contextual understanding.</description>
+  <maintainer email="giubots@protonmail.com">Giulio Antonio Abbo</maintainer>
+  <license>Apache-2.0</license>
+
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>tts_msgs</exec_depend>
   <exec_depend>hri_msgs</exec_depend>
+  <exec_depend>hri_valawai_msgs</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend version_gte="2.17.0">python3-openai-pip</exec_depend>
+  <exec_depend version_gte="2.12.5">python3-pydantic</exec_depend>
+
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
   <export>
     <build_type>ament_python</build_type>
   </export>
