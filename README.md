@@ -1,6 +1,6 @@
 # VISION-ENABLED DIALOGUE
 
-A dialogue system that combines speech and camera frames in a shared conversation history, then uses a configurable (for example, text-only or multimodal) language model to generate responses. The code is split into a reusable dialogue manager, a conversation-history layer with summarisation strategies, and entrypoints for standalone and ROS 2 use.
+A dialogue system that combines speech and images in a conversation history with summarisation strategies to improve contextual understanding. It uses a configurable (for example, text-only or multimodal) language model to generate responses. It can be used as a Python library or as a ROS 2 node.
 
 This repository contains the implementation described in the paper _"I Was Blind but Now I See: Implementing Vision-Enabled Dialogue in Social Robots"_ by Giulio Antonio Abbo and Tony Belpaeme (March 2025) [available here](https://giubots.net/publications/was-blind-but/). Link to the [HRI'25 LBR paper](https://doi.org/10.1109/HRI61500.2025.10973830). For the version of the code used in the paper, see the [v0.2.0](https://doi.org/10.5281/zenodo.14627887).
 
@@ -33,7 +33,12 @@ This repository contains the implementation described in the paper _"I Was Blind
 For the standalone Python entrypoint, install the main dependencies:
 
 ```shell
+pip install vision-enabled-dialogue
+
+# Or, if you want to install from source, clone the repository and run:
 pip install -r requirements.txt
+
+# To run the examples, you will also need OpenCV:
 pip install opencv-python
 ```
 

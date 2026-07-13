@@ -4,7 +4,7 @@ package_name = "vision_enabled_dialogue"
 
 setup(
     name=package_name,
-    version="0.3.0",
+    version="0.3.3",
     packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
@@ -14,7 +14,7 @@ setup(
     zip_safe=True,
     maintainer="Giulio Antonio Abbo",
     maintainer_email="giubots@protonmail.com",
-    description="A ROS 2 package for an LLM-based dialogue system that incorporates visual inputs to enhance contextual understanding.",
+    description="A dialogue system that combines speech and images in a conversation history with summarisation strategies to improve contextual understanding.",
     license="Apache-2.0",
     extras_require={"test": ["pytest"]},
     entry_points={

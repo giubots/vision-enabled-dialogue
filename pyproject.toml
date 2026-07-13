@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vision_enabled_dialogue"
+version = "0.3.3"
+authors = [
+  { name="Giulio Antonio Abbo", email="giubots@protonmail.com" },
+]
+description = "A dialogue system that combines speech and images in a conversation history with summarisation strategies to improve contextual understanding."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "Apache-2.0"
+license-files = ["LICEN[CS]E*"]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.urls]
+Homepage = "https://github.com/giubots/vision-enabled-dialogue"
+Issues = "https://github.com/giubots/vision-enabled-dialogue/issues"
